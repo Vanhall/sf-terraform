@@ -63,3 +63,42 @@ module "ya_instance_2" {
   vpc_subnet_id         = yandex_vpc_subnet.subnet-2.id
   instance_zone         = var.zone[1]
 }
+
+resource "yandex_lb_target_group" "target-group-1" {
+  name      = "my-target-group"
+  folder_id = var.folder_id
+
+  target {
+    subnet_id = yandex_vpc_subnet.subnet-1.id
+    address   = module.ya_instance_1.internal_ip_address_vm
+  }
+
+  target {
+    subnet_id = yandex_vpc_subnet.subnet-2.id
+    address   = module.ya_instance_2.internal_ip_address_vm
+  }
+}
+
+resource "yandex_lb_network_load_balancer" "load-balancer-1" {
+  name      = "my-load-balancer"
+  folder_id = var.folder_id
+
+  listener {
+    name = "http-listener"
+    port = 80
+    external_address_spec {
+      ip_version = "ipv4"
+    }
+  }
+
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.target-group-1.id
+
+    healthcheck {
+      name = "default-healthcheck"
+      http_options {
+        port = 80
+      }
+    }
+  }
+}

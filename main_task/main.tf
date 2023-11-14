@@ -20,6 +20,8 @@ terraform {
     skip_credentials_validation = true
     skip_requesting_account_id  = true
   }
+
+  required_version = "~> 1.6.0"
 }
 
 provider "yandex" {

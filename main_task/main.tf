@@ -1,17 +1,32 @@
 terraform {
   required_providers {
     yandex = {
-      source = "yandex-cloud/yandex"
+      source  = "yandex-cloud/yandex"
+      version = ">=0.61.0"
     }
   }
-  required_version = ">= 0.60"
+
+  backend "s3" {
+    endpoints = {
+      s3 = "http://storage.yandexcloud.net"
+    }
+    bucket     = "tf-state-bucket-vnh"
+    region     = "ru-central1-a"
+    key        = "terraform.tfstate"
+    access_key = ""
+    secret_key = ""
+
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true
+  }
 }
 
 provider "yandex" {
   service_account_key_file = file("~/sf/yac-key.json")
-  cloud_id                 = "b1g2i3ab2uo1i452bsnm"
-  folder_id                = "b1ge6lot4hn9qtfho732"
-  zone                     = "ru-central1-b"
+  cloud_id                 = var.cloud_id
+  folder_id                = var.folder_id
+  zone                     = var.zone
 }
 
 data "yandex_compute_image" "my_image" {
@@ -20,7 +35,7 @@ data "yandex_compute_image" "my_image" {
 
 resource "yandex_compute_instance" "vm-1" {
   name = "terraform1"
-  zone = "ru-central1-a"
+  zone = var.zone
 
   resources {
     cores  = 2
@@ -49,15 +64,7 @@ resource "yandex_vpc_network" "network-1" {
 
 resource "yandex_vpc_subnet" "subnet-1" {
   name           = "subnet1"
-  zone           = "ru-central1-a"
+  zone           = var.zone
   network_id     = yandex_vpc_network.network-1.id
   v4_cidr_blocks = ["192.168.10.0/24"]
-}
-
-output "internal_ip_address_vm_1" {
-  value = yandex_compute_instance.vm-1.network_interface.0.ip_address
-}
-
-output "external_ip_address_vm_1" {
-  value = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
 }

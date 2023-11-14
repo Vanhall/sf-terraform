@@ -1,7 +1,7 @@
 variable "zone" {
   description = "Yandex Cloud zone"
-  type        = string
-  default     = "ru-central1-a"
+  type        = list(string)
+  default     = ["ru-central1-a", "ru-central1-b"]
 }
 
 variable "cloud_id" {
